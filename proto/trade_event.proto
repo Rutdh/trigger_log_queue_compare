@@ -1,0 +1,156 @@
+syntax="proto3";
+package proto;
+
+option cc_generic_services = true;
+option java_package = "com.cmschina.proto.risk";
+option java_outer_classname = "RiskLogProto";
+option go_package = "ficc/proto/risk;risk";
+
+import "component.proto";
+import "field.proto";
+import "google/protobuf/any.proto";
+
+message OrderRecord {
+  message Execution {
+      string exec_id = 1;
+      string exec_date = 2; // (YYYYMMDD)
+      string exec_time = 3; // (hh:mm:ss)
+
+      double last_qty = 4;
+      double last_px = 5;
+      double last_amount = 6;
+      double exec_fee = 7;
+      double margin = 8;
+
+      string summary = 9;
+      string trader = 10;
+      string instruction_id = 11; // 指令ID
+      string trd_rpt_id = 12;
+      int32 trd_status = 13;
+  }
+
+  int64 timestamp = 1;
+  string order_id = 2;           // 系统内部委托号
+  string cl_ord_id = 3;          // 客户端委托序号
+  string ext_ord_id = 4;         // 柜台委托序号
+  string rpt_ord_id = 5;         // 申报合同序号
+
+  string portfolio_id = 6;       // 投资组合ID
+  string instruction_id = 7;     // 指令ID
+
+  string sub_acnt_id = 8;        // 二级账户ID
+  string sub_sec_acnt_id = 9;    // 二级证券账号ID
+  string sub_cash_acnt_id = 10;  // 二级资金账号ID
+
+  string ext_acnt_id = 11;       // 一级账户ID
+  string ext_sec_acnt_id = 12;   // 一级证券账号ID
+  string ext_cash_acnt_id = 13;  // 一级资金账号ID
+
+  Instrument instrument = 14; // 金融工具
+  Instrument underlying = 15; // 金融工具
+
+  OrdType ord_type = 16;         // 委托类型
+  Side side = 17;               // 买卖方向
+  double order_qty = 18;         // 委托数量
+  double price = 19;             // 委托价格
+
+  string user_id = 20;           // 用户ID
+  string ord_date = 21;          // 交易日 (YYYYMMDD)
+  string ord_time = 22;          // 交易时间 (YYYYMMDD hh:mm:ss)
+  string expire_time = 23;       // 过期时间 (YYYYMMDD hh:mm:ss)
+
+  OrdStatus pre_ord_status = 24; // 前一次委托状态
+  OrdStatus ord_status = 25;     // 当前委托状态
+
+  double last_qty = 26;          // 最新成交数量
+  double last_px = 27;           // 最新成交价格
+  double cum_qty = 28;           // 累计成交数量
+  double leaves_qty = 29;        // 剩余未完成数量
+  double avg_px = 30;            // 成交均价
+  double order_amount = 31;      // 委托金额
+  double trade_amount = 32;      // 成交金额
+  int32 volume_multiple = 33;    // 手数乘数
+
+  double cxl_qty = 34;           // 撤单数量
+  double cxl_amount = 35;        // 撤单金额
+  string cxl_time = 36;          // 撤单时间 (hh:mm:ss)
+  string cxl_user_id = 37;       // 撤单用户ID
+
+  int32 cxl_rej_reason = 40;     // 撤单拒绝错误码
+  string cxl_rej_msg = 41;       // 撤单拒绝原因
+  int32 rej_reason = 42;         // 委托拒绝错误码
+  string rej_msg = 43;           // 委托拒绝原因
+
+  double margin = 46;
+  repeated MiscFee fee = 47;
+
+  TimeInForce tif = 48;
+  int32 max_price_levels = 49;
+  ExecMode exec_mode = 50;
+
+  PositionEffect position_effect = 51; // 开平标志
+  int32 purpose = 52;                 // 交易目的, for example: speculate and hedge
+  EntrustAction entrust_action = 53;  // 委托动作类型,1下单, 2撤单
+  string attachment = 54;              // 附加信息
+
+  SettlType settl_type = 55;
+  string term_to_maturity = 56;       // 待偿期, 100D
+  MatchType match_type = 57;          // 报价方式, 集中匹配还是连续匹配
+
+  Party counter_party = 58; // 交易对手方
+  Party self_party = 59; // 本方
+  TradeMethod trade_method = 60; // 交易方式
+  double frozen_amount = 61; // 冻结金额
+  double frozen_qty = 62; // 冻结数量
+
+  bool inactive = 63; // 是否冻结
+  string exp_rpdt_date = 64;         // 预计赎回日
+  string pos_detail_key = 65;        // 操作的持仓明细key
+  string parent_id = 66;
+  LegMode leg_mode = 67;
+  string op_marks = 68;
+  string cxl_op_marks = 69;
+  string trade_date = 70;            // 交易日
+  LockPosInfo lock_pos_info = 71;
+  string resource_id = 72;
+  string risk_check_info = 73;
+
+  double frozen_price = 74;          // 冻结价格
+  double stop_px = 75;               // 保护限价
+  string quote_id = 76;
+  int32 flags = 77;
+
+  YieldData yield_data = 78;
+
+  string broker_id = 79;             // 经纪商ID
+  string investor_id = 80;           // 投资者代码
+  string investor_sec_id = 81;       // 投资者股东代码
+
+  double settl_curr_amt = 82;
+  double exchange_rate = 83;
+  double avg_yield = 84; // 平均到期收益率
+
+  string platform_id = 85;
+  // 指定,标签
+  string designation = 86;
+  // 大宗交易签署协议申
+  string signature = 87;
+  // 对方交易单元
+  string counterparty_id = 88;
+
+  Execution execution = 90;
+  google.protobuf.Any object = 91;
+
+  // 锁定方向
+  LockDirection lock_direction = 92;
+  // 是否自动平仓
+  AutoClose auto_close = 93;
+
+  // 策略调度订单优先级
+  int32 order_priority = 94;
+  // 存在自成交冲突的订单列表
+  repeated string anti_order = 95;
+  // 原客户端委托序号
+  string orig_cl_ord_id = 96;
+}
+

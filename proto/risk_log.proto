@@ -1,0 +1,110 @@
+syntax = "proto3";
+
+package proto.risk;
+
+option cc_generic_services = true;
+option java_package = "com.cmschina.proto.risk";
+option java_outer_classname = "RiskLogProto";
+option go_package = "ficc/proto/risk;risk";
+
+import "component.proto";
+
+
+message RiskTriggerLog {
+  // 日志编号
+  int32 sno = 1;
+  // 发生日期
+  int32 busi_date = 2;
+  // 发生时间
+  int32 busi_time = 3;
+  // 监控对象ID
+  int32 object_id = 4;
+  // 监控对象名称
+  string object_name = 5;
+  // 风险类型
+  int32 risk_object_type = 6;
+  // 风险对象
+  string risk_object = 7;
+  // 风控号
+  int32 risk_id = 8;
+  // 风控名称
+  string risk_name = 9;
+  // 所属机构
+  string party_id = 10;
+  // 风控点
+  string risk_summary = 11;
+  // 控制时点
+  string control_point = 12;
+  // 预警位置
+  int32 calc_pos = 13;
+  // 证券
+  Instrument instrument = 14;
+  // 用户代码
+  string user_id = 15;
+  // 职位ID
+  string post_id = 16;
+  // 产品ID
+  string product_id = 17;
+  // 交易组合ID
+  string portfolio_id = 18;
+  // 交易资金帐号
+  string ext_accnt_id = 19;
+  // 交易机构码
+  string order_party_id = 20;
+  // 触发前值
+  double before_value = 21;
+  // 实际值
+  double real_value = 22;
+  // 设置值
+  string set_value = 23;
+  // 分子
+  double numerator = 24;
+  // 分母
+  double denominator = 25;
+  // 订单信息
+  string order_info = 26;
+  // 触发警报操作
+  int32 risk_action = 27;
+  // 触发描述
+  string remark = 28;
+  // 风险类型
+  int32 risk_type = 29;
+  // 触发时间
+  double sorttime = 30;
+  // 委托数量
+  double order_qty = 31;
+  // 委托金额
+  double order_amt = 32;
+  // 委托价格
+  double price = 33;
+  // 委托序号
+  string order_sno = 34;
+  // 净值类型
+  int32 nv_type = 35;
+  // 业务类别
+  int32 BS_flag = 36;
+  // 计算指标
+  double calc_target = 37;
+}
+
+// message QryRiskTriggerLogReq {
+//   proto.OpUser op_user = 1;
+//   repeated string data_party = 2; //所属机构
+//   proto.Page page = 3; //分页信息
+//   int32 start_date = 4; //起始日期
+//   int32 end_date = 5; //结束日期
+//   //模糊匹配(指标名称)
+//   proto.QueryString query = 6;
+//   repeated Control_Point control_point = 7;
+//   repeated Risk_Action risk_action = 8;
+// }
+
+// message QryRiskTriggerLogResp {
+//   proto.OpStatus status = 1;
+//   repeated RiskTriggerLog risktriggerlog = 2;
+//   proto.Page page = 3; //分页信息
+// }
+
+// service RiskLogService {
+//   rpc QryRiskTriggerLog (QryRiskTriggerLogReq) returns (QryRiskTriggerLogResp);//查询风控触发日志记录
+// }

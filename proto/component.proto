@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+package proto;
+
+option cc_generic_services = true;
+option java_package = "com.cmschina.proto.risk";
+option java_outer_classname = "RiskLogProto";
+option go_package = "ficc/proto/risk;risk";
+
+// Instrument component
+message Instrument {
+  string symbol = 1;
+  string security_id = 2;
+  string security_id_source = 3;
+  string security_type = 4;
+  string security_sub_type = 5;
+  string market = 6;
+  string market_group = 7;
+  string product = 8;
+  string product_complex = 9;
+  string security_group = 10;
+  string cfi_code = 11;
+  string appl_id = 12; // used by CCS
+  string market_indicator = 13; // used by CFETS
+  string currency_id = 14;
+}
+
+message MiscFee {
+  int32 misc_fee_type = 1;
+  double misc_fee_amt = 2;
+  string misc_fee_curr = 3;
+}
+
+message ExecMode {
+  // 1 MANUAL          手工单
+  // 2 AUTO            自动单
+  // 3 ALGORITHM       算法单
+  // 4 INSTRUCTION     指令单
+  // 5 FOLLOWUP        跟单
+  // 6 MARKETMAKING    做市单
+  // 7 HEDGE           对冲单
+  // 8 SDF_ARBITRAGE   标债远期套利
+  // 9 TBF_ARBITRAGE   国债期货套利
+  // 10 HEDGE_MANUAL   期货手工对冲
+  // 11 XBOND_ACTIVE_DEAL 主动成交策略
+  // 12 XBOND_BOTH_DEAL 双边成交策略
+  // 13 XBOND_SINGLE_ACTIVE_DEAL 单边主动挂单
+
+  int32 em_type = 1;
+  string em_name = 2;
+  string em_id = 3;
+}
+
+message PartySub {
+  string party_sub_id = 1;
+
+  // PERSON-用户;
+  // CUSTODIAN_INSTITUTION_NAME-托管机构;
+  // CUSTODIAN_ENTITY_CODE-托管机构代码;
+  // SECURITIES_ACCOUNT_NUMBER-托管账号;
+  // SECURITIES_ACCOUNT_NAME-托管账户名称;
+  // SETTLEMENT_BANK_NAME-资金开户行名称;
+  // CASH_ACCOUNT_NUMBER-资金账户
+  string party_sub_id_type = 2;
+}
+
+message Party {
+  string party_id = 1;
+
+  // INITIATOR 机构 发送方;
+  // COUNTERPARTY 102 对手方;
+  string party_role = 2;
+
+  string party_id_source = 3;
+  repeated PartySub party_sub = 4;
+
+  // 交易员ID
+  string trader_id = 10;
+
+  // 交易员名称
+  string trader_name = 11;
+
+  // 组织代码
+  string org_code = 12;
+
+  // 中文全称
+  string ch_name = 13;
+
+  // 中文简称
+  string short_ch_name = 14;
+
+  string party_role_qualifier = 15;
+}
+
+message LockPosInfo {
+  double qty = 1;
+  double price = 2;
+  double amount = 3;
+}
+
+message YieldData {
+  // 0 - 行权收益率
+  // 1 - 到期收益率
+  int32 yield_type = 12;
+  double yield = 13;
+  string yield_calc_date = 3;
+}

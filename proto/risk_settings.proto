@@ -1,0 +1,59 @@
+syntax="proto3";
+package proto.risk;
+
+option cc_generic_services = true;
+option java_package = "com.cmschina.proto.risk";
+option java_outer_classname = "RiskLogProto";
+option go_package = "ficc/proto/risk;risk";
+
+//单个风控对像信息
+message RiskObjectControl {
+    int32 object_id = 1;      //对象序号
+    string object_name = 2;   //对象名称
+    int32 risk_object_type = 3;   //风控对像类型
+    string risk_object = 4;   //风控对象
+    string party_id = 5;      //所属机构
+    int32 status = 6;         //风控状态
+    string creator = 7;
+    string create_time = 8;
+    string last_updator = 9;
+    string last_update_time = 10;
+}
+
+message RiskManageBase {
+    int32 object_id = 1;        // 风控对象编号
+    int32 risk_type = 2;        // 风控类型
+    int32 risk_id = 3;          // 风控序号
+    string risk_name = 4;       // 风控名称
+    string risk_summary = 5;    // 风控说明
+    int32 layer_ctrl_dim = 6;   // 账户控制维度
+    int32 risk_mark = 7;        // 风控标识(风控要求)
+    int32 risk_level = 8;       // 风控等级(1~10)
+    int32 control_level = 9;    // 控制等级
+    string control_point = 10;  // 控制时点
+    int32 status = 11;          // 启用标志
+    int32 interval_time = 12;   // 监控间隔时间
+    int32 calc_pos = 13;        // 风控计算位置
+    int32 date_switch = 14;     // 日期有效开关
+    int32 begin_date = 15;      // 生效日期
+    int32 end_date = 16;        // 失效日期
+    int32 time_switch = 17;     // 时间有效开关
+    int32 begin_time = 18;      // 生效时间
+    int32 end_time = 19;        // 失效时间
+    int32 condition_switch = 20; // 生效条件开关
+    string condition_param = 21; // 生效条件参数
+    int32 include_flag = 22;    // 上下阈值包含标志
+    double min_param_value = 23; // 条件最小值
+    double max_param_value = 24; // 条件最大值
+    int32 template_flag = 25;   // 风控模板标志
+    string template_name = 26;  // 风控模板名称
+    string party_id = 27;       // 模板所属机构
+    string template_remark = 28; // 模板备注
+    uint64 time_stamp = 29;     // 时间戳
+    int32 user_switch = 30;     // 生效用户开关
+    string user_list = 31;      // 生效用户列表
+    string creator = 32;        // 创建人
+    string create_time = 33;    // 创建时间
+    string last_updater = 34;   // 最近修改人
+    string last_update_time = 35; // 最近修改时间
+}

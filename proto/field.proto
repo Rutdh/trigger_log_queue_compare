@@ -1,0 +1,187 @@
+syntax="proto3";
+package proto;
+
+option cc_generic_services = true;
+option java_package = "com.cmschina.proto.risk";
+option java_outer_classname = "RiskLogProto";
+option go_package = "ficc/proto/risk;risk";
+
+enum OrdType {
+  ORD_TYPE_UNDEFINED = 0;
+  ORD_TYPE_MARKET = 49;               // '1'
+  ORD_TYPE_LIMIT = 50;                // '2'
+  ORD_TYPE_STOP = 51;                 // '3'
+  ORD_TYPE_STOP_LIMIT = 52;           // '4'
+  ORD_TYPE_WITH_OR_WITHOUT = 54;      // '6'
+  ORD_TYPE_LIMIT_WITH_OR_WITHOUT = 56; // '8'
+  ORD_TYPE_ON_BASIS = 57;             // '9'
+  ORD_TYPE_PREVIOUSLY_QUOTED = 68;    // 'D'
+  ORD_TYPE_PREVIOUSLY_INDICATED = 69; // 'E'
+  ORD_TYPE_FOREX_SWAP = 71;           // 'G'
+  ORD_TYPE_MARKET_IF_TOUCHED = 74;    // 'J'
+  ORD_TYPE_MARKET_WITH_LEFT_OVER_AS_LIMIT = 75; // 'K'
+  ORD_TYPE_PREVIOUS_FUND_VALUATION_POINT = 76;  // 'L'
+  ORD_TYPE_NEXT_FUND_VALUATION_POINT = 77;      // 'M'
+  ORD_TYPE_PEGGED = 80;               // 'P'
+  ORD_TYPE_COUNTER_ORDER_SELECTION = 81; // 'Q'
+  ORD_TYPE_BEST = 82;
+  ORD_TYPE_LAST = 83;
+  ORD_TYPE_NULL = 84;
+  ORD_TYPE_ONE_CLICK = 98;            // b-点击成交 (FAK)
+  ORD_TYPE_INNOVATE_FIX_PRICE = 99;   // c-科创板固定价格交易
+  ORD_TYPE_AUCTION_LIMIT = 110;       // 港股通-竞价限价
+  ORD_TYPE_ENHANCED_LIMIT = 111;      // 港股通-增强限价
+}
+
+enum Side {
+  SIDE_UNDEFINED = 0;
+  SIDE_BUY = 49;               // '1'
+  SIDE_SELL = 50;              // '2'
+  SIDE_BUY_MINUS = 51;          // '3'
+  SIDE_SELL_PLUS = 52;          // '4'
+  SIDE_SELL_SHORT = 53;         // '5'
+
+  SIDE_AS_DEFINED = 66;         // 'B'
+  SIDE_OPPOSITE = 67;           // 'C'
+  SIDE_SUBSCRIBE = 68;          // 'D'
+  SIDE_REDEEM = 69;             // 'E'
+  SIDE_LEND = 70;               // 'F',逆回购
+  SIDE_BORROW = 71;             // 'G',正回购
+  SIDE_CREATION = 72;           // 'H',申购
+  SIDE_CASH_DIVIDEND = 73;      // 'I',现金分红
+  SIDE_DIVIDENDD_REINVEST = 74; // 'J',分红再投资
+
+  SIDE_BID = 80;                // 1-BID S/B
+  SIDE_OFFER = 81;              // 2-OFFER B/S
+  SIDE_IMPAWN_IN = 82;          // 'R'质押入库
+  SIDE_IMPAWN_OUT = 83;         // 'S'质押出库
+  SIDE_BOND_RATIONED = 84;      // 'T'配债申购
+  SIDE_STOCK_RATIONED = 85;     // 'U'配股申购
+
+  SIDE_TRANSFER = 136;          // 基金转换
+  SIDE_TRANSFER_IN = 137;       // 基金转入
+  SIDE_TRANSFER_OUT = 138;      // 基金转出
+  SIDE_PROVISION = 141;         // 业绩计提
+
+  SIDE_BOND_ISSUE = 200;        // 可转债申购,柜台无对应业务类型,本系统自用,柜台默认使用'1'
+  SIDE_STOCK_ISSUE = 201;       // 新股申购,柜台无对应业务类型,本系统自用,柜台默认使用'1'
+
+  SIDE_KFATX_TO = 301;          // 算法总线To算法
+}
+
+enum OrdStatus {
+  ORD_STATUS_UNDEFINED = 0;
+  ORD_STATUS_NEW = 48;               // '0' 0-有效
+  ORD_STATUS_PARTIALLY_FILLED = 49;  // '1' 1-部成
+  ORD_STATUS_FILLED = 50;            // '2' 2-成交
+  ORD_STATUS_DONE_FOR_DAY = 51;      // '3'
+  ORD_STATUS_CANCELED = 52;          // '4' 4-撤销
+  ORD_STATUS_REPLACED = 53;          // '5' 5-改单完成
+  ORD_STATUS_PENDING_CANCEL = 54;    // '6' 6-撤单中
+  ORD_STATUS_STOPPED = 55;           // '7'
+  ORD_STATUS_REJECTED = 56;          // '8' 8-被拒绝
+  ORD_STATUS_SUSPENDED = 57;         // '9'
+  ORD_STATUS_PENDING_NEW = 65;       // 'A' 10-报单中
+  ORD_STATUS_CALCULATED = 66;        // 'B'
+  ORD_STATUS_EXPIRED = 67;           // 'C' C(过期)
+  ORD_STATUS_ACCEPTED_FOR_BIDDING = 68; // 'D'
+  ORD_STATUS_PENDING_REPLACE = 69;   // 'E' 14-改单中
+  ORD_STATUS_PARTIALLY_CANCELED = 70; // 'F' 15-部撤
+  ORD_STATUS_INACTIVE = 73;          // 'I' 73-冻结
+
+  ORD_STATUS_RESUMED = 82;           // 'R' 82-挂起恢复
+  ORD_STATUS_RISKING = 87;           // 'W' 风控中
+  ORD_STATUS_RISKED = 88;            // 'X' 风控完成
+  ORD_STATUS_INVALID = 89;           // 'Y' 废单
+  ORD_STATUS_CREATED = 90;           // 'Z' 已创建
+
+  ORD_STATUS_IB_FREEZE = 1000;       // 银行间冻结
+  ORD_STATUS_IB_DELETE = 1001;       // 银行间废单
+
+  ORD_XBOND_NOT_OPEN = 2600;         // XBOND未开市
+  ORD_STATUS_NOT_OPEN = 55000000;    // 期货未开市
+}
+
+enum TimeInForce {
+  TIF_UNDEFINED = 0;
+  TIF_DAY = 48;           // '0' day or session
+  TIF_GTC = 49;           // '1' good till cancel
+  TIF_OPG = 50;           // '2' at the opening
+  TIF_IOC = 51;           // '3' immediate or cancel
+  TIF_FOK = 52;           // '4' fill or kill
+  TIF_GTX = 53;           // '5' good till crossing
+  TIF_GTD = 54;           // '6' good till day
+  TIF_CLOSE = 55;         // '7' at the close
+  TIF_GRX = 56;           // '8' good through crossing
+  TIF_CROSS = 57;         // '9' at crossing
+
+  TIF_GFS = 65;           // 'A'
+  TIF_GFD = 66;           // 'B'
+  TIF_GFA = 67;           // 'C'
+}
+
+enum PositionEffect {
+  PE_UNDEFINED = 0;
+  PE_ABANDON_EXERCISE = 65;       // 'A'
+  PE_CLOSE = 67;                  // 'C'
+  PE_EXERCISE = 69;               // 'E'
+  PE_CLOSE_TODAY = 84;            // 'T'
+  PE_FIFO = 70;                   // 'F'
+  PE_OPEN = 79;                   // 'O'
+  PE_ROLLED = 82;                 // 'R'
+  PE_NOTIFY_ON_OPEN = 78;         // 'N'
+  PE_EXERCISE_CLOSE_TODAY = 90;   // 'X'
+  PE_WAIVER_EXERCISE_CLOSE_TODAY = 91; // 'W'
+}
+
+enum EntrustAction {
+  EN_ACTION_UNDEFINED = 0;
+  EN_ACTION_NEW_ORDER = 1;      // 下单
+  EN_ACTION_CANCEL_ORDER = 2;   // 撤单
+}
+
+enum SettlType {
+  SETTLETYPE_UNKNOWN = 0;           // 0
+  CASH_OR_TOD_OR_T_PLUS_0_SETTLTYPE = 1; // 1 T+0
+  NEXT_DAY_OR_TOM_OR_T_PLUS_1 = 2;  // 2 T+1
+  T_PLUS_2 = 3;                     // 3 T+2
+  T_PLUS_3 = 4;                     // 4 T+3
+  T_PLUS_4 = 5;                     // 5 T+4
+}
+
+enum MatchType {
+  UNKNOWN_MATCHTYPE = 0;
+  CONTINUOUS_MATCHING = 9;         // 连续匹配
+  CENTRALIZED_MATCHING = 10;       // 集中匹配
+  MARKET_MAKER_MATCHING = 11;      // 做市商匹配
+}
+
+enum TradeMethod {
+  TRADEMETHOD_UNKNOWN = 0;
+  TRADEMETHOD_ALL = 48;             // 0-汇总行情
+  TRADEMETHOD_NEGOTIATION = 49;     // 1-询价
+  TRADEMETHOD_MATCHING = 51;        // 3-匿名点击
+  TRADEMETHOD_REQUEST_FOR_QUOTE = 52; // 4-RFQ报价
+  TRADEMETHOD_ONE_CLICK = 53;       // 5-点击成交
+}
+
+enum LegMode {
+  LEG_MODE_NONE = 0;
+  LEG_MODE_CROSS = 1;
+  LEG_MODE_LIST = 2;
+  LEG_MODE_MULTILEG = 3;
+  LEG_MODE_SINGLE_REPLACE = 4;
+  LEG_MODE_QUOTE = 5;
+}
+
+enum LockDirection {
+  DIR_UNDEFINED = 0;
+  DIR_LOCK = 1;
+  DIR_UNLOCK = 2;
+}
+
+enum AutoClose {
+  AutoClose_Undefined = 0;
+  AutoClose_Yes = 1;   // 自动平
+  AutoClose_No = 2;    // 免自动平
+}
