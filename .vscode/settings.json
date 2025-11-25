@@ -3,5 +3,8 @@
     "options": [
       "--proto_path=${workspaceFolder}/proto",
     ]
-  }
+  },
+  "clangd.arguments": [
+    "--header-insertion=never"
+  ]
 }

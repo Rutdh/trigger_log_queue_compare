@@ -30,10 +30,10 @@ public:
         }
 
         // 3. 配置 Glog 选项
-        FLAGS_alsologtostderr = true;           // 同时输出到控制台
+        FLAGS_alsologtostderr = false;           // 同时输出到控制台
         FLAGS_colorlogtostderr = true;          // 彩色输出
         FLAGS_log_dir = log_dir;                // 设置日志目录
-        FLAGS_minloglevel = google::INFO;       // 最小日志级别
+        FLAGS_minloglevel = google::FATAL;       // 最小日志级别
         FLAGS_stop_logging_if_full_disk = true; // 磁盘满时停止日志
 
         // 4. 初始化 Glog
