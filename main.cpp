@@ -7,17 +7,20 @@
 #include <vector>
 #include <boost/lockfree/queue.hpp>
 #include "lockfree_queue.h"
+#include "lockfree_queue_no_block.h"
 #include "SystemContext.h"
 #include <chrono>
 #include <iostream>
 #include <memory>
 #include <nanobench.h>
 #include <utility>
+#include <functional>
 #include "OrderStruct.h"
 #include "RiskSettingStruct.h"
 #include "RiskTriggerLogData.h"
 #include "SystemContext.h"
 #include "RiskTriggerLogThread.h"
+#include <random>
 
 
 CRiskItemInfo MakeRiskItemInfo() {
@@ -130,127 +133,124 @@ std::unique_ptr<CRiskTriggerLogData> MakeLogData(const CRiskItemInfo &risk_info,
   return data;
 }
 
+// 全局benchmark配置参数
+constexpr int count = 4096;
+constexpr int producer_thread_cnt = 3;
+constexpr int consumer_thread_cnt = 1;
+constexpr int empty_item_no = count * producer_thread_cnt + 1;
+
+template<typename QueueType>
+auto createQueueBenchmark(const std::string& queue_name,
+                         QueueType& queue,
+                         const CRiskItemInfo& risk_info,
+                         const ST_INNER_ORDER& order,
+                         const proto::risk::RiskTriggerLog& log_tpl,
+                         ankerl::nanobench::Bench& bench) {
+  return [&bench, &queue, &risk_info, &order, &log_tpl, queue_name]() {
+    bench.run(queue_name + " lockfree queue bench test", [&] {
+      auto push_func = [&] {
+        for (int i = 0; i < count; ++i) {
+          auto data = MakeLogData(risk_info, &order, 5, log_tpl);
+          if constexpr (std::is_same_v<QueueType, boost::lockfree::queue<CRiskTriggerLogData*>>) {
+            queue.push(data.release());
+          } else {
+            queue.push(data.release(), true);
+          }
+        }
+      };
+
+      auto pop_func = [&] {
+        int cnt = 1;
+        CRiskTriggerLogData *tmp = nullptr;
+
+        // 检查初始状态
+        if (cnt == empty_item_no) {
+          if (queue.empty()) {
+            LOG(INFO) << queue_name << " 队列元素数量正常";
+            return;
+          } else {
+            LOG(INFO) << queue_name << " 队列元素数量异常";
+          }
+        }
+
+        while (true) {
+          bool popped = false;
+          if constexpr (std::is_same_v<QueueType, boost::lockfree::queue<CRiskTriggerLogData*>>) {
+            popped = queue.pop(tmp);
+          } else {
+            popped = queue.pop(tmp, true);
+          }
+          
+          if (!popped) {
+            break;
+          }
+          
+          delete tmp;
+          tmp = nullptr;
+          cnt++;
+          LOG(INFO) << queue_name << "_que cnt: " << cnt;
+
+          if (cnt == empty_item_no) {
+            if (queue.empty()) {
+              LOG(INFO) << queue_name << " 队列元素数量正常";
+            } else {
+              LOG(INFO) << queue_name << " 队列元素数量异常";
+            }
+            return;
+          }
+        }
+      };
+
+      std::vector<std::thread> producer_threads;
+      std::vector<std::thread> consumer_threads;
+
+      for (int i = 0; i < producer_thread_cnt; ++i) {
+        producer_threads.emplace_back(push_func);
+      }
+
+      for (int i = 0; i < consumer_thread_cnt; ++i) {
+        consumer_threads.emplace_back(pop_func);
+      }
+
+      for (auto &t : producer_threads) { t.join(); }
+      for (auto &t : consumer_threads) { t.join();
+      }
+    });
+  };
+}
+
 int main(int argc, char* argv[]) {
   SystemContext ctx(&argc, &argv, argv[0], "./logs");
-
-  constexpr int count = 4096;
-  constexpr int producer_thread_cnt = 3;
-  constexpr int consumer_thread_cnt = 1;
-  constexpr int empty_item_no = count * producer_thread_cnt + 1;
   auto risk_info = MakeRiskItemInfo();
   auto order = MakeOrder();
   auto log_tpl = MakeLogTemplate();
-  boost::lockfree::queue<CRiskTriggerLogData *> boost_que(10);
-  lockfree_queue<CRiskTriggerLogData *> ks_que(10);
+  boost::lockfree::queue<CRiskTriggerLogData *> boost_que(count);
+  lockfree_queue<CRiskTriggerLogData *> ks_no_block_que(count);
+  lockfree_queue_no_block<CRiskTriggerLogData *> ks_que(count);
   ankerl::nanobench::Bench bench;
   bench.relative(true);
-  bench.minEpochIterations(10);
+  bench.minEpochIterations(50);
+  
 
+  // 创建benchmark可调用对象
+  auto boost_benchmark = createQueueBenchmark("boost", boost_que, risk_info, order, log_tpl, bench);
+  auto ks_benchmark = createQueueBenchmark("ks", ks_que, risk_info, order, log_tpl, bench);
+  auto ks_no_block_benchmark = createQueueBenchmark("ks_no_block", ks_no_block_que, risk_info, order, log_tpl, bench);
+  
+  // 将可调用对象存储在vector中
+  std::vector<std::function<void()>> benchmarks = {boost_benchmark, ks_benchmark, ks_no_block_benchmark};
+  
+  // 使用均匀分布的随机数引擎进行随机打乱
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::shuffle(benchmarks.begin(), benchmarks.end(), gen);
 
-  bench.run("boost lockfree queue bench test", [&] {
-    auto push_func = [&] {
-      for (int i = 0; i < count; ++i) {
-        auto data = MakeLogData(risk_info, &order, 5, log_tpl);
-        boost_que.push(data.release());
-      }
-    };
-
-    auto pop_func = [&] {
-      int cnt = 1;
-      CRiskTriggerLogData *tmp = nullptr;
-
-      if (cnt == empty_item_no) {
-        if (boost_que.empty()) {
-          LOG(INFO) << "boost 队列元素数量正常";
-          return ;
-        } else {
-          LOG(INFO) << "boost 队列元素数量异常";
-        }
-      }
-
-      while (boost_que.pop(tmp)) {
-        delete tmp;
-        tmp = nullptr;
-        cnt++;
-        LOG(INFO) << "boost_que cnt: " << cnt;
-
-        if (cnt == empty_item_no) {
-          if (boost_que.empty()) {
-            LOG(INFO) << "boost 队列元素数量正常";
-          } else {
-            LOG(INFO) << "boost 队列元素数量异常";
-          }
-          return ;
-        }
-      }
-    };
-
-    std::vector<std::thread> producer_threads;
-    std::vector<std::thread> consumer_threads;
-
-    for (int i = 0; i <  3; ++i) {
-      producer_threads.emplace_back(push_func);
+  for (int i = 0; i < 30; ++i) {
+    // 执行打乱后的benchmark
+    for (auto& benchmark : benchmarks) {
+      benchmark();
     }
-
-    for (int i = 0; i <  1; ++i) {
-      consumer_threads.emplace_back(pop_func);
-    }
-
-    for (auto &t : producer_threads) { t.join(); }
-    for (auto &t : consumer_threads) { t.join(); }
-  });
-
-  bench.run("ks lockfree queue bench test", [&] {
-    auto push_func = [&] {
-      for (int i = 0; i < count; ++i) {
-        auto data = MakeLogData(risk_info, &order, 5, log_tpl);
-        ks_que.push(data.release(), true);
-      }
-    };
-
-    auto pop_func = [&] {
-      int cnt = 1;
-      CRiskTriggerLogData *tmp = nullptr;
-
-      // if (cnt == empty_item_no || cnt == empty_item_no - 1 || cnt == empty_item_no + 1) {
-      //   if (ks_que.empty()) {
-      //     LOG(INFO) << "ks 队列元素数量正常";
-      //     return ;
-      //   } else {
-      //     LOG(INFO) << "ks 队列元素数量异常";
-      //   }
-      // }
-
-      while (ks_que.pop(tmp, true)) {
-        delete tmp;
-        tmp = nullptr;
-        cnt++;
-        LOG(INFO) << "ks_que cnt: " << cnt;
-        if (cnt == empty_item_no) {
-          if (ks_que.empty()) {
-            LOG(INFO) << "ks 队列元素数量正常";
-          } else {
-            LOG(INFO) << "ks 队列元素数量异常";
-          }
-          return ;
-        }
-      }
-    };
-
-    std::vector<std::thread> producer_threads;
-    std::vector<std::thread> consumer_threads;
-
-    for (int i = 0; i <  3; ++i) {
-      producer_threads.emplace_back(push_func);
-    }
-
-    for (int i = 0; i <  1; ++i) {
-      consumer_threads.emplace_back(pop_func);
-    }
-
-    for (auto &t : producer_threads) { t.join(); }
-    for (auto &t : consumer_threads) { t.join(); }
-  });
+  }
 
   return 0;
 }
