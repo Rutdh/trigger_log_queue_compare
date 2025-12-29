@@ -5,6 +5,6 @@
     ]
   },
   "clangd.arguments": [
-    "--header-insertion=never"
+    // "--header-insertion=never"
   ]
 }

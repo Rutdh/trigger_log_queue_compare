@@ -8,7 +8,6 @@
 #include <boost/lockfree/queue.hpp>
 #include "lockfree_queue.h"
 #include "lockfree_queue_no_block.h"
-#include "SystemContext.h"
 #include <chrono>
 #include <iostream>
 #include <memory>
@@ -19,6 +18,7 @@
 #include "RiskSettingStruct.h"
 #include "RiskTriggerLogData.h"
 #include "SystemContext.h"
+#include "BenchmarkRunner.h"
 #include "RiskTriggerLogThread.h"
 #include <random>
 
@@ -146,13 +146,16 @@ auto createQueueBenchmark(const std::string& queue_name,
                          const ST_INNER_ORDER& order,
                          const proto::risk::RiskTriggerLog& log_tpl,
                          ankerl::nanobench::Bench& bench) {
-  return [&bench, &queue, &risk_info, &order, &log_tpl, queue_name]() {
+  auto runner = std::make_shared<BenchmarkRunner>(producer_thread_cnt, consumer_thread_cnt);
+
+  return [runner, &bench, &queue, &risk_info, &order, &log_tpl, queue_name]() {
     bench.run(queue_name + " lockfree queue bench test", [&] {
       auto push_func = [&] {
         for (int i = 0; i < count; ++i) {
           auto data = MakeLogData(risk_info, &order, 5, log_tpl);
           if constexpr (std::is_same_v<QueueType, boost::lockfree::queue<CRiskTriggerLogData*>>) {
-            queue.push(data.release());
+            auto raw = data.release();
+            while (!queue.push(raw)) { std::this_thread::yield(); }
           } else {
             queue.push(data.release(), true);
           }
@@ -160,20 +163,10 @@ auto createQueueBenchmark(const std::string& queue_name,
       };
 
       auto pop_func = [&] {
-        int cnt = 1;
+        int cnt = 0;
         CRiskTriggerLogData *tmp = nullptr;
 
-        // 检查初始状态
-        if (cnt == empty_item_no) {
-          if (queue.empty()) {
-            LOG(INFO) << queue_name << " 队列元素数量正常";
-            return;
-          } else {
-            LOG(INFO) << queue_name << " 队列元素数量异常";
-          }
-        }
-
-        while (true) {
+        while (cnt < empty_item_no) {
           bool popped = false;
           if constexpr (std::is_same_v<QueueType, boost::lockfree::queue<CRiskTriggerLogData*>>) {
             popped = queue.pop(tmp);
@@ -182,39 +175,17 @@ auto createQueueBenchmark(const std::string& queue_name,
           }
           
           if (!popped) {
-            break;
+            std::this_thread::yield();
+            continue;
           }
           
           delete tmp;
           tmp = nullptr;
           cnt++;
-          LOG(INFO) << queue_name << "_que cnt: " << cnt;
-
-          if (cnt == empty_item_no) {
-            if (queue.empty()) {
-              LOG(INFO) << queue_name << " 队列元素数量正常";
-            } else {
-              LOG(INFO) << queue_name << " 队列元素数量异常";
-            }
-            return;
-          }
         }
       };
 
-      std::vector<std::thread> producer_threads;
-      std::vector<std::thread> consumer_threads;
-
-      for (int i = 0; i < producer_thread_cnt; ++i) {
-        producer_threads.emplace_back(push_func);
-      }
-
-      for (int i = 0; i < consumer_thread_cnt; ++i) {
-        consumer_threads.emplace_back(pop_func);
-      }
-
-      for (auto &t : producer_threads) { t.join(); }
-      for (auto &t : consumer_threads) { t.join();
-      }
+      runner->Run(push_func, pop_func);
     });
   };
 }

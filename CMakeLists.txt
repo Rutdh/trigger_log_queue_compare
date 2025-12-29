@@ -37,12 +37,17 @@ set(CMS_SRCS
     cms/RiskTriggerLogThread.cpp
 )
 
+set(SRCS
+    src/EpochBarrier.cpp
+)
+
 add_executable(
     trigger_log_queue_compare
     main.cpp
     threadbase.cpp
     ${PROTO_SRCS}
     ${CMS_SRCS}
+    ${SRCS}
 )
 
 message(STATUS "bin dir is ${CMAKE_CURRENT_BINARY_DIR}")
