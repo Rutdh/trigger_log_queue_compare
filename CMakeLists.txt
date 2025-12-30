@@ -47,7 +47,7 @@ add_executable(
     threadbase.cpp
     ${PROTO_SRCS}
     ${CMS_SRCS}
-    ${SRCS}
+    # ${SRCS}
 )
 
 message(STATUS "bin dir is ${CMAKE_CURRENT_BINARY_DIR}")

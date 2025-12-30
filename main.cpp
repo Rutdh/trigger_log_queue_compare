@@ -137,7 +137,8 @@ std::unique_ptr<CRiskTriggerLogData> MakeLogData(const CRiskItemInfo &risk_info,
 constexpr int count = 4096;
 constexpr int producer_thread_cnt = 3;
 constexpr int consumer_thread_cnt = 1;
-constexpr int empty_item_no = count * producer_thread_cnt + 1;
+// 生产总量 = 每个生产者 count 条
+constexpr int total_item_count = count * producer_thread_cnt;
 
 template<typename QueueType>
 auto createQueueBenchmark(const std::string& queue_name,
@@ -166,7 +167,7 @@ auto createQueueBenchmark(const std::string& queue_name,
         int cnt = 0;
         CRiskTriggerLogData *tmp = nullptr;
 
-        while (cnt < empty_item_no) {
+        while (cnt < total_item_count) {
           bool popped = false;
           if constexpr (std::is_same_v<QueueType, boost::lockfree::queue<CRiskTriggerLogData*>>) {
             popped = queue.pop(tmp);
@@ -200,7 +201,7 @@ int main(int argc, char* argv[]) {
   lockfree_queue_no_block<CRiskTriggerLogData *> ks_que(count);
   ankerl::nanobench::Bench bench;
   bench.relative(true);
-  bench.minEpochIterations(50);
+  bench.minEpochIterations(10);
   
 
   // 创建benchmark可调用对象
