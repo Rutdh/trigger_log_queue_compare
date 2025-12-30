@@ -7,14 +7,11 @@
   },
   "configurePresets": [
     {
-      "name": "base-clang",
-      "displayName": "Clang + Ninja (base)",
-      "description": "Configure with clang/clang++ using Ninja and export compile_commands.json.",
-      "generator": "Ninja",
+      "name": "base-g++",
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "/usr/bin/clang",
-        "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
+        "CMAKE_C_COMPILER": "/usr/bin/gcc",
+        "CMAKE_CXX_COMPILER": "/usr/bin/g++",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
       }
@@ -22,7 +19,7 @@
     {
       "name": "debug",
       "displayName": "Debug",
-      "inherits": "base-clang",
+      "inherits": "base-g++",
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "/usr/bin/g++",
         "CMAKE_BUILD_TYPE": "Debug"
@@ -31,7 +28,7 @@
     {
       "name": "release",
       "displayName": "Release",
-      "inherits": "base-clang",
+      "inherits": "base-g++",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
